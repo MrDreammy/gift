@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0c0a2c">
+  <title>Гра на мільйон</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💎</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;700&family=Unbounded:wght@500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Студійні прожектори на тлі -->
+  <div class="stage" aria-hidden="true">
+    <div class="beam beam-1"></div>
+    <div class="beam beam-2"></div>
+    <div class="beam beam-3"></div>
+    <div class="floor"></div>
+  </div>
+
+  <main id="app">
+    <!-- Стартовий екран -->
+    <section id="screen-start" class="screen is-active" aria-labelledby="start-title">
+      <div class="hero">
+        <div class="emblem" aria-hidden="true"><span></span></div>
+        <p class="hero-sub" id="start-subtitle"></p>
+        <h1 class="hero-title" id="start-title"></h1>
+        <p class="hero-lead" id="start-lead"></p>
+        <button class="btn btn-gold btn-lg" id="btn-start" type="button">Почати гру</button>
+        <p class="hero-rules" id="start-rules"></p>
+      </div>
+    </section>
+
+    <!-- Ігровий екран -->
+    <section id="screen-game" class="screen" aria-label="Гра">
+      <div class="game">
+        <div class="game-main">
+          <header class="topbar">
+            <div class="lifelines" role="group" aria-label="Підказки">
+              <button class="lifeline" data-lifeline="fifty" type="button" title="50 на 50: прибрати дві неправильні відповіді">
+                <span class="ll-icon">50:50</span>
+              </button>
+              <button class="lifeline" data-lifeline="phone" type="button" title="Дзвінок другу">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1l-2.3 2.2z"/></svg>
+                <span class="sr-only">Дзвінок другу</span>
+              </button>
+              <button class="lifeline" data-lifeline="audience" type="button" title="Допомога залу">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V11h3v9H4zm6.5 0V4h3v16h-3zM17 20v-6h3v6h-3z"/></svg>
+                <span class="sr-only">Допомога залу</span>
+              </button>
+            </div>
+            <div class="topbar-right">
+              <button class="icon-btn" id="btn-sound" type="button" aria-pressed="true" title="Звук">
+                <svg viewBox="0 0 24 24" aria-hidden="true" class="ic-on"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 8v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z"/></svg>
+                <svg viewBox="0 0 24 24" aria-hidden="true" class="ic-off"><path d="M3 9v6h4l5 5V4L7 9H3zm18.3 6.9-1.4 1.4L17 14.4l-2.9 2.9-1.4-1.4 2.9-2.9-2.9-2.9 1.4-1.4 2.9 2.9 2.9-2.9 1.4 1.4-2.9 2.9 2.9 2.9z"/></svg>
+                <span class="sr-only">Звук</span>
+              </button>
+              <button class="icon-btn ladder-toggle" id="btn-ladder" type="button" aria-controls="ladder" aria-expanded="false">
+                Призи
+              </button>
+            </div>
+          </header>
+
+          <div class="panel" id="panel" hidden>
+            <div class="panel-head">
+              <h3 class="panel-title" id="panel-title"></h3>
+              <button class="panel-close" id="panel-close" type="button" aria-label="Закрити підказку">×</button>
+            </div>
+            <div class="panel-body" id="panel-body"></div>
+          </div>
+
+          <div class="question-block" id="question-block">
+            <p class="q-meta">Запитання <b id="q-num"></b> з <span id="q-total"></span>, вартість <b id="q-prize"></b></p>
+            <img class="q-image" id="q-image" alt="" hidden>
+            <h2 class="question" id="q-text"></h2>
+          </div>
+
+          <div class="answers" id="answers" role="group" aria-label="Варіанти відповіді"></div>
+
+          <div class="result" id="result" hidden aria-live="polite">
+            <p class="result-title" id="result-title"></p>
+            <p class="result-text" id="result-text"></p>
+            <p class="result-note" id="result-note"></p>
+            <button class="btn btn-gold" id="btn-next" type="button"></button>
+          </div>
+
+          <div class="actions" id="actions">
+            <button class="btn btn-ghost" id="btn-walk" type="button">Забрати гроші</button>
+            <button class="btn btn-gold" id="btn-confirm" type="button" hidden>Це моя остаточна відповідь</button>
+          </div>
+
+          <p class="kbd-hint">Клавіші: A–D або 1–4 — вибрати, Enter — підтвердити</p>
+        </div>
+
+        <aside class="ladder" id="ladder" aria-label="Шкала призів">
+          <div class="ladder-head">
+            <span>Призи</span>
+            <button class="panel-close ladder-close" id="btn-ladder-close" type="button" aria-label="Сховати призи">×</button>
+          </div>
+          <ol class="ladder-list" id="ladder-list"></ol>
+        </aside>
+      </div>
+    </section>
+
+    <!-- Фінальний екран -->
+    <section id="screen-end" class="screen" aria-labelledby="end-title">
+      <div class="hero end">
+        <p class="hero-sub" id="end-sub"></p>
+        <h2 class="hero-title end-title" id="end-title"></h2>
+        <p class="end-prize-label">Ваш виграш</p>
+        <p class="end-prize" id="end-prize"></p>
+        <p class="hero-lead end-message" id="end-message"></p>
+        <button class="btn btn-gold btn-lg" id="btn-restart" type="button">Зіграти ще раз</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Вікно підтвердження -->
+  <div class="modal" id="modal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <h3 id="modal-title"></h3>
+      <p id="modal-text"></p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="modal-cancel" type="button"></button>
+        <button class="btn btn-gold" id="modal-ok" type="button"></button>
+      </div>
+    </div>
+  </div>
+
+  <canvas id="confetti" aria-hidden="true"></canvas>
+
+  <!-- Спочатку запитання, потім рушій гри -->
+  <script src="questions.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
