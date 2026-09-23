@@ -70,6 +70,26 @@ img { max-width: 100%; }
   opacity: .8;
 }
 
+/* Кіт-талісман: визирає з-за нижнього краю в порожньому лівому куті.
+   З'являється, лише коли для нього справді є місце, і ніколи не перекриває текст. */
+.cat {
+  display: none;
+  position: absolute;
+  left: clamp(10px, 3.5vw, 70px);
+  bottom: -6px;
+  /* висота підлаштовується під вільне місце під грою, щоб кіт ніколи не ліз під текст */
+  height: min(calc(100vh - 575px), 300px);
+  width: auto;
+  filter: drop-shadow(0 22px 30px rgba(0, 0, 0, .55));
+  animation: cat-peek 1s var(--ease) .5s both;
+}
+@keyframes cat-peek {
+  from { opacity: 0; transform: translateY(45%) rotate(-3deg); }
+}
+@media (min-width: 1120px) and (min-height: 730px) {
+  .cat { display: block; }
+}
+
 #app { position: relative; z-index: 1; }
 
 /* ============ Екрани ============ */
