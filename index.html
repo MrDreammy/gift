@@ -18,13 +18,12 @@
     <div class="beam beam-2"></div>
     <div class="beam beam-3"></div>
     <div class="floor"></div>
-    <!-- Кіт-талісман у порожньому куті. Заміни файл img/cat.webp — і зміниться картинка -->
-    <img class="cat" src="img/cat.webp" alt="" width="470" height="642" loading="lazy" decoding="async">
   </div>
 
   <main id="app">
     <!-- Стартовий екран -->
     <section id="screen-start" class="screen is-active" aria-labelledby="start-title">
+      <img class="start-image start-left" src="img/start-left.webp" alt="" loading="lazy" decoding="async">
       <div class="hero">
         <div class="emblem" aria-hidden="true"><span></span></div>
         <p class="hero-sub" id="start-subtitle"></p>
@@ -33,6 +32,7 @@
         <button class="btn btn-gold btn-lg" id="btn-start" type="button">Почати гру</button>
         <p class="hero-rules" id="start-rules"></p>
       </div>
+      <img class="start-image start-right" src="img/start-right.webp" alt="" loading="lazy" decoding="async">
     </section>
 
     <!-- Ігровий екран -->
@@ -83,6 +83,7 @@
 
           <div class="result" id="result" hidden aria-live="polite">
             <p class="result-title" id="result-title"></p>
+            <img class="result-image" id="result-image" alt="" hidden>
             <p class="result-text" id="result-text"></p>
             <p class="result-note" id="result-note"></p>
             <button class="btn btn-gold" id="btn-next" type="button"></button>
@@ -111,6 +112,7 @@
       <div class="hero end">
         <p class="hero-sub" id="end-sub"></p>
         <h2 class="hero-title end-title" id="end-title"></h2>
+        <img class="end-image" id="end-image" alt="" hidden>
         <p class="end-prize-label">Ваш виграш</p>
         <p class="end-prize" id="end-prize"></p>
         <p class="hero-lead end-message" id="end-message"></p>
@@ -130,6 +132,9 @@
       </div>
     </div>
   </div>
+
+  <!-- Кіт-талісман: над блоками гри, але не перехоплює кліки. Заміни img/cat.webp — і зміниться картинка -->
+  <img class="cat" src="img/cat.webp" alt="" width="470" height="642" loading="lazy" decoding="async">
 
   <canvas id="confetti" aria-hidden="true"></canvas>
 

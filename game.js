@@ -73,13 +73,14 @@
   const el = {
     qNum: $('#q-num'), qTotal: $('#q-total'), qPrize: $('#q-prize'), qText: $('#q-text'), qImage: $('#q-image'),
     qBlock: $('#question-block'), answers: $('#answers'),
-    result: $('#result'), resultTitle: $('#result-title'), resultText: $('#result-text'), resultNote: $('#result-note'),
+    result: $('#result'), resultTitle: $('#result-title'), resultImage: $('#result-image'), resultText: $('#result-text'), resultNote: $('#result-note'),
     next: $('#btn-next'), walk: $('#btn-walk'), confirm: $('#btn-confirm'),
     panel: $('#panel'), panelTitle: $('#panel-title'), panelBody: $('#panel-body'),
     ladder: $('#ladder'), ladderList: $('#ladder-list'), ladderBtn: $('#btn-ladder'),
     sound: $('#btn-sound'),
     modal: $('#modal'), modalTitle: $('#modal-title'), modalText: $('#modal-text'),
     modalOk: $('#modal-ok'), modalCancel: $('#modal-cancel'),
+    endImage: $('#end-image'),
     canvas: $('#confetti'),
   };
   const lifelineBtns = [...document.querySelectorAll('.lifeline')];
@@ -131,12 +132,22 @@
 
   function show(id) {
     document.querySelectorAll('.screen').forEach((s) => s.classList.toggle('is-active', s.id === id));
+    // Кіт видний тільки під час гри
+    const cat = document.querySelector('.cat');
+    if (cat) {
+      cat.classList.toggle('visible', id === 'screen-game');
+    }
     window.scrollTo(0, 0);
   }
 
   function startGame() {
-    questions = buildQuestions();
-    state = { idx: 0, selected: null, locked: false, used: { fifty: false, phone: false, audience: false }, hidden: new Set() };
+    const built = buildQuestions();
+    // Відокремлюємо запитання з keepOrder від звичайних
+    const withKeepOrder = built.filter((q) => q.keepOrder);
+    const toShuffle = built.filter((q) => !q.keepOrder);
+    // Перемішуємо звичайні запитання
+    questions = shuffle(toShuffle).concat(withKeepOrder);
+    state = { idx: 0, selected: null, locked: false, used: { fifty: false, phone: false, audience: false }, hidden: new Set(), correctAnswerCount: 0 };
     show('screen-game');
     renderQuestion();
     sfx.start();
@@ -241,6 +252,37 @@
     setTimeout(reveal, delay >= 0 ? delay : 2200);
   }
 
+  function createHearts(x, y) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const heartEmojis = ['❤️', '💕', '💖', '💗', '💝'];
+    const W = window.innerWidth;
+    const H = window.innerHeight;
+
+    for (let i = 0; i < 16; i++) {
+      const heart = document.createElement('div');
+      heart.className = 'heart';
+      heart.textContent = heartEmojis[Math.floor(Math.random() * heartEmojis.length)];
+
+      // Випадкові напрями для вильоту по всьому екрану
+      const angle = (i / 16) * Math.PI * 2;
+      const distance = 200 + Math.random() * 300;
+      const drift = Math.cos(angle) * distance;
+      const vertDrift = Math.sin(angle) * distance * 0.7;
+
+      heart.style.setProperty('--drift', drift + 'px');
+      heart.style.setProperty('--vert-drift', vertDrift + 'px');
+      heart.style.left = x + 'px';
+      heart.style.top = y + 'px';
+
+      // Випадкова затримка для ефекту хвилі
+      const delay = Math.random() * 0.1;
+      heart.style.setProperty('--delay', delay + 's');
+
+      document.body.appendChild(heart);
+      setTimeout(() => heart.remove(), 2400);
+    }
+  }
+
   function reveal() {
     const q = questions[state.idx];
     const btns = answerBtns();
@@ -248,20 +290,32 @@
     const isLast = state.idx === total - 1;
 
     btns[state.selected].classList.remove('locked');
-    btns[q.correctIndex].classList.add('correct');
+    // Показуємо правильну відповідь тільки якщо гравець відповів правильно
+    if (ok) {
+      btns[q.correctIndex].classList.add('correct');
+    }
     if (!ok) btns[state.selected].classList.add('wrong');
 
     if (ok) {
       sfx.correct();
       el.ladderList.querySelector('.current')?.classList.add('won');
+      // Создаём сердечки в центре правильного ответа
+      const correctBtn = btns[q.correctIndex];
+      const rect = correctBtn.getBoundingClientRect();
+      createHearts(rect.left + rect.width / 2, rect.top + rect.height / 2);
       const note = safeHavens.includes(state.idx + 1) && !isLast
         ? `Незгоряна сума: ${fmt(prizes[state.idx])}`
         : '';
+      // Циклически показываем фото (correct-1, correct-2, correct-3, correct-4)
+      state.correctAnswerCount += 1;
+      const correctImageNum = ((state.correctAnswerCount - 1) % 4) + 1;
+      const correctImage = `img/correct-${correctImageNum}.webp`;
       showResult({
         ok,
         title: pick(cfg.correctPhrases || ['Правильно!', 'Абсолютно правильно!', 'І це правильна відповідь!']),
         text: q.comment,
         note,
+        image: correctImage,
         button: isLast ? 'До головного призу' : 'Наступне запитання',
         next: () => {
           if (isLast) return finish('win');
@@ -271,20 +325,26 @@
       });
     } else {
       sfx.wrong();
-      const right = q.answers[q.correctIndex];
       showResult({
         ok,
         title: 'На жаль, це неправильна відповідь',
-        text: `Правильна відповідь: ${LETTERS[q.correctIndex]}: ${right.text}` + (q.comment ? `\n${q.comment}` : ''),
+        text: q.comment || '',
+        image: 'img/wrong-answer.webp',
         button: 'Подивитися підсумок',
         next: () => finish('lose'),
       });
     }
   }
 
-  function showResult({ ok, title, text, note, button, next }) {
+  function showResult({ ok, title, text, note, image, button, next }) {
     el.result.className = 'result ' + (ok ? 'is-ok' : 'is-bad');
     el.resultTitle.textContent = title;
+    if (image) {
+      el.resultImage.src = image;
+      el.resultImage.hidden = false;
+    } else {
+      el.resultImage.hidden = true;
+    }
     el.resultText.textContent = text || '';
     el.resultText.hidden = !text;
     el.resultNote.textContent = note || '';
@@ -445,6 +505,16 @@
     sub = `Правильних відповідей: ${answered} з ${total}`;
     $('#end-sub').textContent = sub;
     $('#end-title').textContent = title;
+    // Показуємо відповідне фото залежно від результату
+    if (type === 'win') {
+      el.endImage.src = 'img/win.webp';
+      el.endImage.hidden = false;
+    } else if (type === 'lose') {
+      el.endImage.src = 'img/lose.webp';
+      el.endImage.hidden = false;
+    } else {
+      el.endImage.hidden = true;
+    }
     $('#end-prize').textContent = prizeText(prize);
     $('#end-message').textContent = message || '';
     closeLadder();
